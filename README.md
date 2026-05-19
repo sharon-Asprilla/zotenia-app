@@ -13,6 +13,6 @@ aparte la visualizacion de datos en  las tablas inferiores.
 este sofware fue creado para zootecnia. un poryecto inicializado por su funcionalidad y recursos de datos rapidos.
 
 ## tecnologias usadas
--stremalit
+-streamlit
 ## dependencias listadas 
 requirements.txt
