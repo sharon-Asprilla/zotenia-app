@@ -1,8 +1,14 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLEnum, Boolean
 from sqlalchemy.orm import relationship
-from .database import Base
 import enum
-from .models import ProductionType, AnimalStatus
+
+# Import Base and enums in a way that works when running as script or package
+try:
+    from database import Base
+    from models import ProductionType, AnimalStatus
+except Exception:
+    from app.database import Base
+    from app.models import ProductionType, AnimalStatus
 
 class UserDB(Base):
     __tablename__ = "users"
@@ -49,3 +55,70 @@ class ExpenseDB(Base):
     amount = Column(Float)
     description = Column(String)
     date = Column(DateTime)
+
+class FeedingRecordDB(Base):
+    __tablename__ = "feeding_records"
+    id = Column(Integer, primary_key=True, index=True)
+    animal_id = Column(String)
+    feed_type = Column(String)
+    quantity_kg = Column(Float)
+    frequency_daily = Column(Integer)
+    supplier = Column(String)
+    unit_cost = Column(Float)
+    timestamp = Column(DateTime)
+
+class HealthRecordDB(Base):
+    __tablename__ = "health_records"
+    id = Column(Integer, primary_key=True, index=True)
+    animal_id = Column(String)
+    vaccines = Column(String)
+    medications = Column(String)
+    diagnosis = Column(String)
+    treatment = Column(String)
+    deworming_date = Column(DateTime)
+    vet_observations = Column(String)
+
+class ProductionDB(Base):
+    __tablename__ = "productions"
+    id = Column(Integer, primary_key=True, index=True)
+    animal_id = Column(String)
+    product_type = Column(String)
+    amount = Column(Float)
+    unit = Column(String)
+    date = Column(DateTime)
+
+class AnimalDefaultProductionDB(Base):
+    __tablename__ = "animal_default_production"
+    id = Column(Integer, primary_key=True, index=True)
+    animal_id = Column(String, unique=True)
+    production_type = Column(String)
+    production_unit = Column(String)
+
+class EnvironmentRecordDB(Base):
+    __tablename__ = "environment_records"
+    id = Column(Integer, primary_key=True, index=True)
+    temperature = Column(Float)
+    humidity = Column(Float)
+    water_quality_ph = Column(Float)
+    ventilation_status = Column(String)
+    rainfall_mm = Column(Float)
+    observation = Column(String)
+    timestamp = Column(DateTime)
+
+class SmartAlertDB(Base):
+    __tablename__ = "alerts"
+    id = Column(Integer, primary_key=True, index=True)
+    alert_type = Column(String)
+    message = Column(String)
+    severity = Column(String)
+    is_resolved = Column(Boolean, default=False)
+    created_at = Column(DateTime)
+
+class EvidenceDB(Base):
+    __tablename__ = "evidences"
+    id = Column(Integer, primary_key=True, index=True)
+    type = Column(String)
+    file_url = Column(String)
+    description = Column(String)
+    linked_entity_id = Column(String)
+    timestamp = Column(DateTime)
