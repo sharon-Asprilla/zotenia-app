@@ -82,29 +82,39 @@ def get_db():
     return SessionLocal()
 
 # --- LÓGICA DE SESIÓN Y LOGIN ---
-if 'logged_in' not in st.session_state:
-    st.session_state['logged_in'] = False
+for key in ['logged_in', 'username', 'show_register']:
+    if key not in st.session_state:
+        st.session_state[key] = False if key != 'username' else None
 
 def login_user(username, password):
-    db = SessionLocal()
-    user = db.query(UserDB).filter(
-        UserDB.username == username, 
-        UserDB.password == password
-    ).first()
-    db.close()
-    return user
+    try:
+        db = SessionLocal()
+        user = db.query(UserDB).filter(
+            UserDB.username == username, 
+            UserDB.password == password
+        ).first()
+        db.close()
+        return user
+    except Exception:
+        return None
 
 def register_user(username, password):
     db = SessionLocal()
-    existing = db.query(UserDB).filter(UserDB.username == username).first()
-    if existing:
+    try:
+        existing = db.query(UserDB).filter(UserDB.username == username).first()
+        if existing:
+            db.close()
+            return False, "El usuario ya existe"
+        
+        new_user = UserDB(username=username, password=password)
+        db.add(new_user)
+        db.commit()
         db.close()
-        return False, "El usuario ya existe"
-    new_user = UserDB(username=username, password=password)
-    db.add(new_user)
-    db.commit()
-    db.close()
-    return True, "Usuario creado con éxito"
+        return True, "Usuario creado con éxito"
+    except Exception as e:
+        db.rollback()
+        db.close()
+        return False, f"Error en base de datos: {str(e)}"
 
 def create_default_user():
     db = SessionLocal()
@@ -117,25 +127,24 @@ def create_default_user():
 create_default_user()
 
 if not st.session_state['logged_in']:
-    st.title(" Acceso a Zotenia")
-    with st.form("login_form"):
-        user_input = st.text_input("Usuario")
-        pass_input = st.text_input("Contraseña", type="password")
-        col1, col2 = st.columns(2)
-        if col1.form_submit_button("Entrar"):
-            user = login_user(user_input, pass_input)
-            if user:
-                st.session_state['logged_in'] = True
-                st.session_state['username'] = user.username
+    if not st.session_state.get('show_register', False):
+        st.title(" Acceso a Zotenia")
+        with st.form("login_form"):
+            user_input = st.text_input("Usuario")
+            pass_input = st.text_input("Contraseña", type="password")
+            col1, col2 = st.columns(2)
+            if col1.form_submit_button("Entrar"):
+                user = login_user(user_input, pass_input)
+                if user:
+                    st.session_state['logged_in'] = True
+                    st.session_state['username'] = user.username
+                    st.rerun()
+                else:
+                    st.error("Credenciales incorrectas. Si no tienes cuenta, regístrate abajo.")
+            if col2.form_submit_button("Ir a Registro"):
+                st.session_state['show_register'] = True
                 st.rerun()
-            else:
-                st.error("Credenciales incorrectas. Si no tienes cuenta, regístrate abajo.")
-        if col2.form_submit_button("Registrar usuario"):
-            # Mostrar el formulario de registro debajo
-            st.session_state['show_register'] = True
-
-    # Formulario de registro (visible si el usuario pidió registrarse o si no existe cuenta)
-    if st.session_state.get('show_register', False):
+    else:
         st.subheader("Registro de Usuario")
         with st.form("register_form"):
             reg_user = st.text_input("Nombre de usuario", key="reg_user")
@@ -159,6 +168,9 @@ if not st.session_state['logged_in']:
                         st.rerun()
                     else:
                         st.error(msg)
+            if st.form_submit_button("Volver al Login"):
+                st.session_state['show_register'] = False
+                st.rerun()
 else:
     st.sidebar.title(f"🌱 Zootecnia")
     menu = ["Dashboard", "1. Info General", "2. Registro Animal", "3. Alimentación", 
