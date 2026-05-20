@@ -43,7 +43,7 @@ class AnimalBase(BaseModel):
     initial_weight: float
     current_weight: float
     status: AnimalStatus
-    history: List[str] = []
+    history: Optional[str] = None
     cycle_id: int
 
 class AnimalCreate(AnimalBase):
@@ -62,19 +62,19 @@ class FeedingRecord(BaseModel):
     frequency_daily: int
     supplier: str
     unit_cost: float
-    supplements: Optional[List[str]]
+    supplements: Optional[str] = None
     timestamp: datetime = Field(default_factory=datetime.now)
 
 # --- MÓDULO 4: SALUD ANIMAL ---
 class HealthRecord(BaseModel):
     animal_id: str
-    vaccines: List[str]
-    medications: List[str]
-    symptoms: Optional[str]
-    diagnosis: Optional[str]
-    treatment: Optional[str]
+    vaccines: Optional[str] = "N/A"
+    medications: Optional[str] = None
+    symptoms: Optional[str] = None
+    diagnosis: Optional[str] = None
+    treatment: Optional[str] = None
     deworming_date: datetime
-    vet_observations: str
+    vet_observations: Optional[str] = None
 
 # --- MÓDULO 5: PRODUCCIÓN (Ejemplo Ganadería) ---
 class CattleProduction(BaseModel):

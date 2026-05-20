@@ -1,12 +1,12 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLEnum, Boolean
-from sqlalchemy.orm import relationship
 import enum
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLEnum, Boolean, Text
+from sqlalchemy.orm import relationship
 
-# Import Base and enums in a way that works when running as script or package
+# Importación robusta para evitar errores de "ModuleNotFoundError: No module named 'app'"
 try:
     from database import Base
     from models import ProductionType, AnimalStatus
-except Exception:
+except ImportError:
     from app.database import Base
     from app.models import ProductionType, AnimalStatus
 
@@ -43,6 +43,7 @@ class AnimalDB(Base):
     initial_weight = Column(Float)
     current_weight = Column(Float)
     status = Column(SQLEnum(AnimalStatus))
+    history = Column(Text, nullable=True)
     
     cycle_id = Column(Integer, ForeignKey("productive_cycles.id"))
     cycle = relationship("ProductiveCycleDB", back_populates="animals")
@@ -64,6 +65,7 @@ class FeedingRecordDB(Base):
     quantity_kg = Column(Float)
     frequency_daily = Column(Integer)
     supplier = Column(String)
+    supplements = Column(Text, nullable=True)
     unit_cost = Column(Float)
     timestamp = Column(DateTime)
 
@@ -71,12 +73,13 @@ class HealthRecordDB(Base):
     __tablename__ = "health_records"
     id = Column(Integer, primary_key=True, index=True)
     animal_id = Column(String)
-    vaccines = Column(String)
-    medications = Column(String)
-    diagnosis = Column(String)
-    treatment = Column(String)
+    symptoms = Column(Text, nullable=True)
+    vaccines = Column(String, nullable=True)
+    medications = Column(String, nullable=True)
+    diagnosis = Column(String, nullable=True)
+    treatment = Column(String, nullable=True)
     deworming_date = Column(DateTime)
-    vet_observations = Column(String)
+    vet_observations = Column(String, nullable=True)
 
 class ProductionDB(Base):
     __tablename__ = "productions"

@@ -2,8 +2,7 @@ import streamlit as st
 from datetime import datetime
 import os
 
-# Import database and models in a way that works whether the module is run
-# as a script (streamlit run app/ui.py) or imported as package (app.ui)
+# Importación robusta para compatibilidad con Streamlit
 try:
     from database import engine, SessionLocal
     from db_models import (
@@ -12,7 +11,7 @@ try:
         EnvironmentRecordDB, SmartAlertDB, EvidenceDB, AnimalDefaultProductionDB
     )
     from models import ProductionType, AnimalStatus
-except Exception:
+except ImportError:
     from app.database import engine, SessionLocal
     from app.db_models import (
         Base, UserDB, ProductiveCycleDB, AnimalDB, ExpenseDB,
@@ -127,6 +126,7 @@ if not st.session_state['logged_in']:
             user = login_user(user_input, pass_input)
             if user:
                 st.session_state['logged_in'] = True
+                st.session_state['username'] = user.username
                 st.rerun()
             else:
                 st.error("Credenciales incorrectas. Si no tienes cuenta, regístrate abajo.")
@@ -146,6 +146,8 @@ if not st.session_state['logged_in']:
                     st.error("Completa usuario y contraseña")
                 elif reg_pass != reg_pass2:
                     st.error("Las contraseñas no coinciden")
+                elif " " in reg_user:
+                    st.error("El usuario no puede contener espacios")
                 else:
                     ok, msg = register_user(reg_user, reg_pass)
                     if ok:
@@ -268,7 +270,8 @@ else:
                     new_animal = AnimalDB(
                         animal_id=a_id, breed=breed, sex=sex,
                         age_months=age, initial_weight=weight, current_weight=weight,
-                        status=status, cycle_id=cycle_options[selected_cycle_code]
+                        status=status, cycle_id=cycle_options[selected_cycle_code],
+                        history=""
                     )
                     db.add(new_animal)
                     db.commit()
@@ -314,7 +317,16 @@ else:
             vaccine = st.text_input("Vacuna/Medicamento")
             diag = st.text_area("Diagnóstico/Observaciones")
             if st.form_submit_button("Guardar Registro Médico"):
-                db.add(HealthRecordDB(animal_id=a_id, vaccines=vaccine, diagnosis=diag, deworming_date=datetime.now()))
+                new_health = HealthRecordDB(
+                    animal_id=a_id, 
+                    vaccines=vaccine, 
+                    diagnosis=diag,
+                    symptoms="",
+                    treatment="",
+                    deworming_date=datetime.now(),
+                    vet_observations="Registro desde UI"
+                )
+                db.add(new_health)
                 db.commit()
                 st.success("Historial médico actualizado")
 

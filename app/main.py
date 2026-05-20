@@ -1,8 +1,15 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from .database import engine, get_db, Base
-from . import db_models, models
+
+try:
+    from database import engine, get_db, Base
+    import db_models
+    import models
+except ImportError:
+    from app.database import engine, get_db, Base
+    from app import db_models
+    from app import models
 
 # Crear las tablas en la base de datos
 Base.metadata.create_all(bind=engine)
